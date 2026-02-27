@@ -21,16 +21,16 @@ const { frontmatter } = Astro.props;
         {frontmatter.subtitle && <p class="post-subtitle">{frontmatter.subtitle}</p>}
 
         <!-- Audio Player -->
-        <div class="listen-bar" id="listen-bar">
-          <button class="listen-btn" id="listen-btn" aria-label="Listen to this post">
-            <svg class="icon-play" id="icon-play" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            <svg class="icon-pause" id="icon-pause" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        <div id="listen-bar" style="display:flex;align-items:center;gap:14px;margin-top:24px;padding:10px 16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:6px;">
+          <button id="listen-btn" style="display:inline-flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;font-family:var(--mono);font-size:0.7rem;letter-spacing:0.04em;color:var(--text-muted);padding:0;white-space:nowrap;" aria-label="Listen to this post">
+            <svg id="icon-play" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <svg id="icon-pause" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="display:none;"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
             <span id="listen-label">Listen to this post</span>
           </button>
-          <div class="listen-progress-track" id="progress-track" style="display:none">
-            <div class="listen-progress-bar" id="progress-bar"></div>
+          <div id="progress-track" style="flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden;">
+            <div id="progress-bar" style="height:100%;width:0%;background:var(--accent);border-radius:2px;transition:width 0.3s linear;"></div>
           </div>
-          <span class="listen-time" id="listen-time"></span>
+          <span id="listen-time" style="font-family:var(--mono);font-size:0.6rem;color:var(--text-faint);white-space:nowrap;min-width:28px;text-align:right;"></span>
         </div>
       </header>
 
@@ -240,67 +240,6 @@ const { frontmatter } = Astro.props;
     color: var(--accent);
   }
 
-  /* Audio Player */
-  .listen-bar {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-top: 24px;
-    padding: 10px 16px;
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius, 6px);
-  }
-
-  .listen-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-family: var(--mono);
-    font-size: 0.7rem;
-    letter-spacing: 0.04em;
-    color: var(--text-muted);
-    padding: 0;
-    white-space: nowrap;
-    transition: color var(--transition);
-  }
-
-  .listen-btn:hover {
-    color: var(--accent);
-  }
-
-  .listen-btn svg {
-    flex-shrink: 0;
-  }
-
-  .listen-progress-track {
-    flex: 1;
-    height: 3px;
-    background: var(--border);
-    border-radius: 2px;
-    overflow: hidden;
-    cursor: pointer;
-  }
-
-  .listen-progress-bar {
-    height: 100%;
-    width: 0%;
-    background: var(--accent);
-    border-radius: 2px;
-    transition: width 0.3s linear;
-  }
-
-  .listen-time {
-    font-family: var(--mono);
-    font-size: 0.6rem;
-    color: var(--text-faint);
-    white-space: nowrap;
-    min-width: 28px;
-    text-align: right;
-  }
 </style>
 
 <script>
@@ -339,10 +278,9 @@ const { frontmatter } = Astro.props;
 
   function setPlaying(playing: boolean) {
     isPlaying = playing;
-    iconPlay.style.display = playing ? 'none' : 'block';
-    iconPause.style.display = playing ? 'block' : 'none';
+    iconPlay.style.display = playing ? 'none' : 'inline';
+    iconPause.style.display = playing ? 'inline' : 'none';
     label.textContent = playing ? 'Listening...' : 'Listen to this post';
-    progressTrack.style.display = playing ? 'block' : (spokenChars > 0 ? 'block' : 'none');
   }
 
   btn.addEventListener('click', () => {
