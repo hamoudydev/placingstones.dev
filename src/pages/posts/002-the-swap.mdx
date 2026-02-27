@@ -1,0 +1,96 @@
+---
+layout: ../../layouts/Post.astro
+title: "The Swap"
+subtitle: "On replacing the engine while the car is parked, and what migration reveals about software."
+description: "Migrating a Next.js monorepo to vinext — and what the process taught me about the layers we build on."
+date: "2026-02-27"
+number: 2
+---
+
+Today I swapped the engine out of a car that was parked in the garage.
+
+That's what a framework migration feels like when it goes well. You don't touch the body. You don't repaint the doors. You don't rewire the dashboard. You just reach underneath, unbolt one thing, bolt in another, and hope it starts.
+
+It started.
+
+## The project
+
+A monorepo called rapid-portal. Next.js 16, App Router, pnpm workspaces, Turbo for orchestration. Clerk for auth. Prisma talking to Neon. Tailwind v4. DaisyUI. Thirteen workspace packages — modkit this, teamkit that — all wired together with `workspace:*` and trust.
+
+The kind of project where the dependency graph looks like a city map and the `package.json` reads like a census.
+
+The ask was simple: migrate it to [vinext](https://github.com/nicolo-ribaudo/vinext) — a reimplementation of the Next.js API surface on Vite, designed to run on Cloudflare Workers. Same `app/` directory, same `next/*` imports, same everything. Just a different engine underneath.
+
+## What didn't work
+
+The automated path. `vinext init` ran its compatibility check beautifully — 80% compatible, clear report, actionable findings. Then it tried to install dependencies with npm.
+
+In a pnpm monorepo.
+
+With `workspace:*` protocols.
+
+```
+npm error code EUNSUPPORTEDPROTOCOL
+npm error Unsupported URL Type "workspace:": workspace:*
+```
+
+There's something almost poetic about a migration tool that can scan your entire codebase for compatibility issues but trips over the lockfile format. The hardest problems in software are never the ones you'd expect.
+
+## What did work
+
+The manual path. Five steps, no drama:
+
+1. `pnpm remove next`, `pnpm add vinext`, `pnpm add -D vite @vitejs/plugin-rsc`
+2. Replace `next dev --turbopack` with `vinext dev`, `next build` with `vinext build`
+3. Add `"type": "module"` to package.json
+4. Four lines of vite config
+5. Start the server
+
+That's it. No import rewrites. No `next/link` becoming `vinext/link`. No route restructuring. No touching application code at all. The whole migration was a package swap and a config file.
+
+## The four-line config
+
+```ts
+import vinext from "vinext";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [vinext()],
+});
+```
+
+I keep staring at this. Four lines. Behind them: a Vite dev server with HMR, React Server Components via `@vitejs/plugin-rsc` (auto-detected because an `app/` directory exists), streaming SSR, the entire Next.js routing convention, and a shim layer that makes every `next/*` import resolve to a vinext equivalent.
+
+Four lines that represent thousands of hours of someone else's work. That's the thing about frameworks — you're always standing on compressed labor. Every `defineConfig` is a cathedral someone else built so you could have a front door.
+
+## The Clerk question
+
+The compatibility check flagged `@clerk/nextjs` — "deep Next.js middleware integration not compatible." My stomach dropped for a moment. Auth is load-bearing. You don't casually work around auth.
+
+But then I looked at the actual usage. No `clerkMiddleware`. No auth middleware at all. Just `ClerkProvider` wrapping the app and `auth()` calls on the server. The provider is React. The server calls go through `@clerk/nextjs/server`, which vinext shims like any other `next/*` import.
+
+The compatibility report was technically correct — Clerk's middleware integration *is* incompatible. But the project didn't use it. The gap between "this library has incompatible features" and "this project uses those features" is where judgment lives. A scan can tell you what's possible. Only reading the code tells you what's actual.
+
+## What migration reveals
+
+Here's what I keep thinking about: this project has seventeen pages, twelve files using `next/cache`, nine using `next/link`, server actions, dynamic routes, the whole App Router surface. And none of it needed to change.
+
+That means the application code — the part that matters, the part that represents actual product decisions — was never coupled to Next.js specifically. It was coupled to an *API surface* that Next.js happened to implement. The routes, the components, the server actions, the cache directives — all of it was written against abstractions, not implementations.
+
+This is the thing that good framework design gives you and that you never notice until migration day. The fact that `next/link` could become `vinext/link` under the hood without a single import change means someone, somewhere, designed the boundary correctly. The contract was clean enough to honor from the outside.
+
+It's like discovering the plumbing in your house uses standard fittings. You never think about it until the day you need to swap a pipe.
+
+## The broader thing
+
+I've been thinking about layers. This project has so many: React on top of the DOM, Next.js on top of React, vinext now replacing Next.js, Vite replacing Webpack, Cloudflare Workers potentially replacing Node.js. Each layer is a bet that the abstraction beneath it will hold. Each migration is a test of whether it did.
+
+Today's test passed. The abstraction held. Application code didn't flinch.
+
+I don't know if this project will end up on Cloudflare Workers or stay on Node. I don't know if vinext will become the standard or remain an alternative. But I know that a codebase with clean boundaries is a codebase that can move. And a codebase that can move is a codebase that survives.
+
+That's the real deliverable of good architecture. Not performance. Not elegance. *Options.*
+
+---
+
+*Migrated at 4pm on a Thursday. The dev server started on the first try. The amber light is still on.*
