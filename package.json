@@ -11,6 +11,7 @@
   "dependencies": {
     "@astrojs/mdx": "^4.3.13",
     "@astrojs/rss": "^4.0.15",
-    "astro": "^5.17.1"
+    "astro": "^5.17.1",
+    "astro-feelback": "^0.3.4"
   }
 }
