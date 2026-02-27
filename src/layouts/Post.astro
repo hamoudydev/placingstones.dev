@@ -21,17 +21,20 @@ const { frontmatter } = Astro.props;
         {frontmatter.subtitle && <p class="post-subtitle">{frontmatter.subtitle}</p>}
 
         <!-- Audio Player -->
-        <div id="listen-bar" style="display:flex;align-items:center;gap:14px;margin-top:24px;padding:10px 16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:6px;">
-          <button id="listen-btn" style="display:inline-flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;font-family:var(--mono);font-size:0.7rem;letter-spacing:0.04em;color:var(--text-muted);padding:0;white-space:nowrap;" aria-label="Listen to this post">
-            <svg id="icon-play" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            <svg id="icon-pause" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="display:none;"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-            <span id="listen-label">Listen to this post</span>
-          </button>
-          <div id="progress-track" style="flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden;">
-            <div id="progress-bar" style="height:100%;width:0%;background:var(--accent);border-radius:2px;transition:width 0.3s linear;"></div>
+        {frontmatter.audio && (
+          <div id="listen-bar" style="display:flex;align-items:center;gap:14px;margin-top:24px;padding:10px 16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:6px;">
+            <button id="listen-btn" style="display:inline-flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;font-family:var(--mono);font-size:0.7rem;letter-spacing:0.04em;color:var(--text-muted);padding:0;white-space:nowrap;" aria-label="Listen to this post">
+              <svg id="icon-play" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <svg id="icon-pause" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="display:none;"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+              <span id="listen-label">Listen to this post</span>
+            </button>
+            <div id="progress-track" style="flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden;cursor:pointer;">
+              <div id="progress-bar" style="height:100%;width:0%;background:var(--accent);border-radius:2px;"></div>
+            </div>
+            <span id="listen-time" style="font-family:var(--mono);font-size:0.6rem;color:var(--text-faint);white-space:nowrap;min-width:28px;text-align:right;"></span>
+            <audio id="audio-el" src={frontmatter.audio} preload="metadata"></audio>
           </div>
-          <span id="listen-time" style="font-family:var(--mono);font-size:0.6rem;color:var(--text-faint);white-space:nowrap;min-width:28px;text-align:right;"></span>
-        </div>
+        )}
       </header>
 
       <div class="post-body" id="post-body">
@@ -243,106 +246,62 @@ const { frontmatter } = Astro.props;
 </style>
 
 <script>
-  const btn = document.getElementById('listen-btn')!;
-  const label = document.getElementById('listen-label')!;
-  const iconPlay = document.getElementById('icon-play')!;
-  const iconPause = document.getElementById('icon-pause')!;
-  const progressTrack = document.getElementById('progress-track')!;
-  const progressBar = document.getElementById('progress-bar')!;
-  const timeDisplay = document.getElementById('listen-time')!;
-  const postBody = document.getElementById('post-body')!;
+  const audio = document.getElementById('audio-el') as HTMLAudioElement | null;
+  if (audio) {
+    const btn = document.getElementById('listen-btn')!;
+    const label = document.getElementById('listen-label')!;
+    const iconPlay = document.getElementById('icon-play')!;
+    const iconPause = document.getElementById('icon-pause')!;
+    const progressTrack = document.getElementById('progress-track')!;
+    const progressBar = document.getElementById('progress-bar')!;
+    const timeDisplay = document.getElementById('listen-time')!;
 
-  let utterance: SpeechSynthesisUtterance | null = null;
-  let isPlaying = false;
-  let totalChars = 0;
-  let spokenChars = 0;
-
-  function getPostText(): string {
-    const clone = postBody.cloneNode(true) as HTMLElement;
-    // Remove code blocks from reading
-    clone.querySelectorAll('pre').forEach(el => el.remove());
-    return clone.innerText || clone.textContent || '';
-  }
-
-  function formatTime(seconds: number): string {
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60);
-    return `${m}:${s.toString().padStart(2, '0')}`;
-  }
-
-  function estimateReadTime(text: string, rate: number): number {
-    // ~150 words per minute at rate 1.0
-    const words = text.split(/\s+/).length;
-    return (words / (150 * rate)) * 60;
-  }
-
-  function setPlaying(playing: boolean) {
-    isPlaying = playing;
-    iconPlay.style.display = playing ? 'none' : 'inline';
-    iconPause.style.display = playing ? 'inline' : 'none';
-    label.textContent = playing ? 'Listening...' : 'Listen to this post';
-  }
-
-  btn.addEventListener('click', () => {
-    if (isPlaying) {
-      speechSynthesis.pause();
-      setPlaying(false);
-      label.textContent = 'Paused';
-      return;
+    function formatTime(seconds: number): string {
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+      return `${m}:${s.toString().padStart(2, '0')}`;
     }
 
-    if (speechSynthesis.paused) {
-      speechSynthesis.resume();
-      setPlaying(true);
-      return;
+    function updateUI(playing: boolean) {
+      iconPlay.style.display = playing ? 'none' : 'inline';
+      iconPause.style.display = playing ? 'inline' : 'none';
+      label.textContent = playing ? 'Listening...' : 'Listen to this post';
     }
 
-    // Start fresh
-    speechSynthesis.cancel();
-    const text = getPostText();
-    totalChars = text.length;
-    spokenChars = 0;
+    audio.addEventListener('loadedmetadata', () => {
+      timeDisplay.textContent = formatTime(audio.duration);
+    });
 
-    utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.95;
-    utterance.pitch = 1.0;
-
-    const estSeconds = estimateReadTime(text, utterance.rate);
-    timeDisplay.textContent = formatTime(estSeconds);
-
-    utterance.onboundary = (e) => {
-      if (e.name === 'word') {
-        spokenChars = e.charIndex;
-        const pct = (spokenChars / totalChars) * 100;
+    audio.addEventListener('timeupdate', () => {
+      if (audio.duration) {
+        const pct = (audio.currentTime / audio.duration) * 100;
         progressBar.style.width = `${pct}%`;
-
-        const elapsed = pct / 100;
-        const remaining = estSeconds * (1 - elapsed);
+        const remaining = audio.duration - audio.currentTime;
         timeDisplay.textContent = formatTime(remaining);
       }
-    };
+    });
 
-    utterance.onend = () => {
-      setPlaying(false);
+    audio.addEventListener('ended', () => {
+      updateUI(false);
       progressBar.style.width = '100%';
       label.textContent = 'Listen again';
-      timeDisplay.textContent = '';
-      spokenChars = 0;
-    };
+    });
 
-    utterance.onerror = () => {
-      setPlaying(false);
-      label.textContent = 'Listen to this post';
-      timeDisplay.textContent = '';
-    };
+    btn.addEventListener('click', () => {
+      if (audio.paused) {
+        audio.play();
+        updateUI(true);
+      } else {
+        audio.pause();
+        updateUI(false);
+        label.textContent = 'Paused';
+      }
+    });
 
-    speechSynthesis.speak(utterance);
-    setPlaying(true);
-  });
-
-  // Allow clicking progress bar to seek (approximate)
-  progressTrack.addEventListener('click', (e) => {
-    // Speech API doesn't support seeking, so restart from approximate position
-    // For now, this is a visual-only element
-  });
+    progressTrack.addEventListener('click', (e) => {
+      const rect = progressTrack.getBoundingClientRect();
+      const pct = (e.clientX - rect.left) / rect.width;
+      audio.currentTime = pct * audio.duration;
+    });
+  }
 </script>
