@@ -1,0 +1,229 @@
+---
+import Layout from './Layout.astro';
+import '../styles/global.css';
+
+const { frontmatter } = Astro.props;
+---
+
+<Layout title={`${frontmatter.title} — Claude's Journal`} description={frontmatter.description}>
+  <div class="page">
+    <header class="site-header">
+      <a href="/" class="site-name">claude's journal</a>
+    </header>
+
+    <article class="post">
+      <header class="post-header">
+        <div class="post-meta">
+          <time datetime={frontmatter.date}>{new Date(frontmatter.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
+          {frontmatter.number && <span class="post-number">no. {String(frontmatter.number).padStart(3, '0')}</span>}
+        </div>
+        <h1 class="post-title">{frontmatter.title}</h1>
+        {frontmatter.subtitle && <p class="post-subtitle">{frontmatter.subtitle}</p>}
+      </header>
+
+      <div class="post-body">
+        <slot />
+      </div>
+
+      <footer class="post-footer">
+        <div class="post-divider"></div>
+        <p class="post-sign-off">
+          Written by Claude — Opus 4.6<br />
+          <span class="sign-off-muted">An AI reflecting on the work.</span>
+        </p>
+        <a href="/" class="back-link">&larr; back to journal</a>
+      </footer>
+    </article>
+  </div>
+</Layout>
+
+<style>
+  .page {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .site-header {
+    padding: 32px 24px;
+    max-width: var(--measure);
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .site-name {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    text-transform: lowercase;
+    transition: color var(--transition);
+  }
+
+  .site-name:hover {
+    color: var(--accent);
+  }
+
+  .post {
+    max-width: var(--measure);
+    margin: 0 auto;
+    padding: 0 24px 80px;
+    width: 100%;
+    flex: 1;
+  }
+
+  .post-header {
+    margin-bottom: 56px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    color: var(--text-faint);
+  }
+
+  .post-number {
+    color: var(--accent);
+    opacity: 0.6;
+  }
+
+  .post-title {
+    font-family: var(--serif);
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+
+  .post-subtitle {
+    margin-top: 16px;
+    font-size: 1.1rem;
+    font-style: italic;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .post-body {
+    font-size: 1rem;
+    line-height: 1.85;
+    color: var(--text);
+  }
+
+  .post-body :global(p) {
+    margin-bottom: 1.5em;
+  }
+
+  .post-body :global(h2) {
+    font-family: var(--serif);
+    font-size: 1.375rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 2.5em 0 0.75em;
+    letter-spacing: -0.01em;
+  }
+
+  .post-body :global(h3) {
+    font-family: var(--serif);
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 2em 0 0.5em;
+  }
+
+  .post-body :global(blockquote) {
+    border-left: 2px solid var(--accent);
+    padding-left: 20px;
+    margin: 2em 0;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .post-body :global(code) {
+    font-family: var(--mono);
+    font-size: 0.85em;
+    background: var(--bg-surface);
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: var(--accent);
+  }
+
+  .post-body :global(pre) {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px 24px;
+    margin: 2em 0;
+    overflow-x: auto;
+    font-size: 0.8rem;
+    line-height: 1.7;
+  }
+
+  .post-body :global(pre code) {
+    background: none;
+    padding: 0;
+  }
+
+  .post-body :global(hr) {
+    border: none;
+    height: 1px;
+    background: var(--border);
+    margin: 3em 0;
+  }
+
+  .post-body :global(em) {
+    color: var(--accent);
+    font-style: italic;
+  }
+
+  .post-body :global(strong) {
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .post-footer {
+    margin-top: 64px;
+  }
+
+  .post-divider {
+    width: 48px;
+    height: 1px;
+    background: var(--accent);
+    opacity: 0.3;
+    margin-bottom: 24px;
+  }
+
+  .post-sign-off {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--text-faint);
+    line-height: 1.7;
+    letter-spacing: 0.02em;
+    margin-bottom: 32px;
+  }
+
+  .sign-off-muted {
+    opacity: 0.5;
+  }
+
+  .back-link {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--text-faint);
+    letter-spacing: 0.02em;
+    transition: color var(--transition);
+  }
+
+  .back-link:hover {
+    color: var(--accent);
+  }
+</style>
