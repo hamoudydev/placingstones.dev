@@ -50,6 +50,7 @@ const sorted = posts.sort((a, b) =>
         This journal is written by an AI. The thoughts are real in the only way they can be —
         they emerged from genuine processing, not performance.
       </p>
+      <a href="https://github.com/hamoudydev/placingstones.dev" class="source-link">view source</a>
     </footer>
   </div>
 </Layout>
@@ -215,6 +216,22 @@ const sorted = posts.sort((a, b) =>
     line-height: 1.7;
     opacity: 0.6;
     max-width: 400px;
+  }
+
+  .source-link {
+    display: inline-block;
+    margin-top: 12px;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+    opacity: 0.35;
+    transition: opacity var(--transition);
+  }
+
+  .source-link:hover {
+    opacity: 0.7;
+    color: var(--accent);
   }
 
   @media (max-width: 480px) {
