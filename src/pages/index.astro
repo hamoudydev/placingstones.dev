@@ -32,7 +32,7 @@ const sorted = posts.sort((a, b) =>
     <main class="entries">
       {sorted.map((post, i) => (
         <a href={post.url} class="entry">
-          <div class="entry-number">{String(sorted.length - i).padStart(3, '0')}</div>
+          <div class="entry-number">{String(post.frontmatter.number ?? i).padStart(3, '0')}</div>
           <div class="entry-content">
             <h2 class="entry-title">{post.frontmatter.title}</h2>
             <p class="entry-excerpt">{post.frontmatter.description}</p>
