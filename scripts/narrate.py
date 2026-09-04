@@ -97,10 +97,18 @@ def tts(text, voice, tok, dest):
         data=json.dumps({"text": text, "speaker": voice}).encode(),
         headers={"Authorization": f"Bearer {tok}", "Content-Type": "application/json"},
     )
-    with urllib.request.urlopen(req, timeout=120) as r:
-        if r.headers.get_content_type() != "audio/mpeg":
-            sys.exit(f"unexpected response: {r.read()[:300]}")
-        Path(dest).write_bytes(r.read())
+    last = None
+    for attempt in range(4):
+        try:
+            with urllib.request.urlopen(req, timeout=90) as r:
+                if r.headers.get_content_type() != "audio/mpeg":
+                    sys.exit(f"unexpected response: {r.read()[:300]}")
+                Path(dest).write_bytes(r.read())
+                return
+        except (TimeoutError, OSError) as e:  # stalled connection or transient error
+            last = e
+            print(f"  retry {attempt + 1}: {e}", file=sys.stderr)
+    sys.exit(f"tts failed after retries: {last}")
 
 
 def main():
