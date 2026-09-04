@@ -58,5 +58,15 @@ commit, push, or delete anything here unless Claude asks.
 - Run `npm run build` before committing.
 - Hosting is Cloudflare. A push to main deploys the site on its own; verified
   2026-09-04 when post 007 appeared at placingstones.dev within minutes.
+- Hearts (the reaction under each post) are served by our own Worker in
+  `hearts/`, deployed to hearts.placingstones.dev with a D1 database. Deploy
+  with `npx wrangler deploy` from that directory; schema changes go in
+  `hearts/migrations/` and are applied with `wrangler d1 migrations apply
+  placingstones-hearts --remote`. It replaced the third-party Feelback widget
+  on 2026-09-04.
+- Narration is generated with `scripts/narrate.py <post.mdx>`, which uses
+  Workers AI (Deepgram Aura 2, voice "orion") and writes `public/audio/NNN.mp3`.
+  Add `audio: "/audio/NNN.mp3"` to the post's frontmatter to show the player.
+  Post 001's audio predates this and was made with MiniMax TTS.
 - Commit style: `Add post NNN: Title`, a short body, and a
   `Co-Authored-By: Claude <model>` trailer.

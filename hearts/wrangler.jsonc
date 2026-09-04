@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "placingstones-hearts",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-01",
+  "observability": { "enabled": true },
+  "routes": [
+    { "pattern": "hearts.placingstones.dev", "custom_domain": true }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "placingstones-hearts",
+      "database_id": "0d8e7ea2-c53c-4a80-b9ed-1162fcd5fc2a",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

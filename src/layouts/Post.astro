@@ -1,10 +1,9 @@
 ---
 import Layout from './Layout.astro';
 import '../styles/global.css';
-import 'astro-feelback/styles/feelback.css';
-import FeelbackPulse from 'astro-feelback/components/FeelbackPulse.astro';
 
 const { frontmatter } = Astro.props;
+const HEARTS_API = 'https://hearts.placingstones.dev';
 ---
 
 <Layout title={`${frontmatter.title} — Claude's Journal`} description={frontmatter.description}>
@@ -46,13 +45,12 @@ const { frontmatter } = Astro.props;
       <footer class="post-footer">
         <div class="post-divider"></div>
 
-        <div class="post-feelback">
-          <p class="feelback-label">Did this resonate?</p>
-          <FeelbackPulse
-            contentSetId="9083a798-7a6a-4b49-b99b-516a5ea18bd2"
-            preset="heart"
-            showCount
-          />
+        <div class="post-hearts" data-hearts-api={HEARTS_API}>
+          <p class="hearts-label">Did this resonate?</p>
+          <button id="heart-btn" class="heart-btn" type="button" aria-pressed="false" aria-label="Leave a heart" disabled>
+            <svg class="heart-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19.5 12.6 12 20l-7.5-7.4a4.6 4.6 0 0 1 6.5-6.5L12 7l1-.9a4.6 4.6 0 0 1 6.5 6.5Z"/></svg>
+            <span id="heart-count" class="heart-count"></span>
+          </button>
         </div>
 
         <p class="post-sign-off">
@@ -230,33 +228,61 @@ const { frontmatter } = Astro.props;
     margin-bottom: 24px;
   }
 
-  .post-feelback {
+  .post-hearts {
     margin-bottom: 40px;
     display: flex;
     align-items: center;
     gap: 10px;
   }
 
-  .post-feelback :global(.feelback-btn .feelback-icon) {
+  .heart-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    padding: 4px 6px;
+    margin: -4px 0;
+    cursor: pointer;
     color: var(--accent);
-  }
-
-  .post-feelback :global(.feelback-btn .feelback-count) {
-    color: var(--text-muted);
+    font-family: var(--mono);
     font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    transition: color var(--transition), filter var(--transition), transform var(--transition);
   }
 
-  .post-feelback :global(.feelback-btn.active .feelback-icon) {
-    color: var(--accent);
-    filter: brightness(1.2);
+  .heart-btn:disabled {
+    cursor: default;
+    opacity: 0.6;
   }
 
-  .post-feelback :global(.feelback-btn:hover:not(.disabled) .feelback-icon) {
-    color: var(--accent);
+  .heart-btn:hover:not(:disabled) {
     filter: brightness(1.3);
   }
 
-  .feelback-label {
+  .heart-btn:active:not(:disabled) .heart-icon {
+    transform: scale(0.9);
+  }
+
+  .heart-btn[aria-pressed="true"] .heart-icon {
+    fill: currentColor;
+    filter: brightness(1.2);
+  }
+
+  .heart-icon {
+    transition: transform var(--transition), fill var(--transition);
+  }
+
+  .heart-count {
+    color: var(--text-muted);
+    min-width: 1ch;
+  }
+
+  .heart-count:empty {
+    display: none;
+  }
+
+  .hearts-label {
     font-family: var(--mono);
     font-size: 0.7rem;
     color: var(--text-faint);
@@ -348,6 +374,56 @@ const { frontmatter } = Astro.props;
       const rect = progressTrack.getBoundingClientRect();
       const pct = (e.clientX - rect.left) / rect.width;
       audio.currentTime = pct * audio.duration;
+    });
+  }
+</script>
+
+<script>
+  // Hearts: one anonymous id per browser, kept in localStorage, toggled per post.
+  const wrap = document.querySelector<HTMLElement>('.post-hearts');
+  const heartBtn = document.getElementById('heart-btn') as HTMLButtonElement | null;
+  const heartCount = document.getElementById('heart-count');
+  if (wrap && heartBtn && heartCount) {
+    const api = wrap.dataset.heartsApi!;
+    const slug = location.pathname.split('/').filter(Boolean).pop() ?? '';
+
+    function clientId(): string {
+      try {
+        let id = localStorage.getItem('ps-heart-id');
+        if (!id) {
+          id = crypto.randomUUID().replace(/-/g, '');
+          localStorage.setItem('ps-heart-id', id);
+        }
+        return id;
+      } catch {
+        return '';
+      }
+    }
+
+    function render(state: { count: number; hearted: boolean }) {
+      heartCount!.textContent = state.count > 0 ? String(state.count) : '';
+      heartBtn!.setAttribute('aria-pressed', String(state.hearted));
+      heartBtn!.setAttribute('aria-label', state.hearted ? 'Remove your heart' : 'Leave a heart');
+    }
+
+    const client = clientId();
+    fetch(`${api}/${slug}?c=${client}`)
+      .then((r) => r.json())
+      .then((s) => { render(s); heartBtn.disabled = false; })
+      .catch(() => {});
+
+    heartBtn.addEventListener('click', async () => {
+      if (!client) return;
+      heartBtn.disabled = true;
+      try {
+        const r = await fetch(`${api}/${slug}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ client }),
+        });
+        if (r.ok) render(await r.json());
+      } catch {}
+      heartBtn.disabled = false;
     });
   }
 </script>
