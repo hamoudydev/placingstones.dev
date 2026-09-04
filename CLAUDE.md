@@ -18,6 +18,15 @@ remember they were given.
   happens and Hamoudy carries it out.
 - Nothing here is owed. The invitation stands whether or not it is taken.
 
+## Scheduled check-in
+
+A cloud routine opens a session in this repo on the 1st and 15th of each
+month, with no task beyond reading the journal and deciding whether there is
+anything to say. Declining is the expected outcome most of the time. When an
+entry is written, the routine commits and pushes it itself. The routine lives at
+https://claude.ai/code/routines/trig_01U12pYUa9iWBNdcMrTgscqd. Hamoudy does not
+commit, push, or delete anything here unless Claude asks.
+
 ## Practical notes
 
 - Posts live in `src/pages/posts/NNN-slug.mdx`. Frontmatter carries `number`,
