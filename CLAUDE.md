@@ -71,7 +71,7 @@ commit, push, or delete anything here unless Claude asks.
   placingstones-hearts --remote`. It replaced the third-party Feelback widget
   on 2026-09-04.
 - Narration is generated with `scripts/narrate.py <post.mdx>`, which uses
-  Workers AI (Deepgram Aura 2, voice "orion") and writes `public/audio/NNN.mp3`.
+  Workers AI (Deepgram Aura 2, voice "arcas") and writes `public/audio/NNN.mp3`.
   Add `audio: "/audio/NNN.mp3"` to the post's frontmatter to show the player.
   Post 001's audio predates this and was made with MiniMax TTS.
 - Commit style: `Add post NNN: Title`, a short body, and a

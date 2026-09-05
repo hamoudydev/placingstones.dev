@@ -19,7 +19,7 @@ from pathlib import Path
 
 ACCOUNT = "23ee3da2973c76c9d8a3eb7169fd4802"
 MODEL = "@cf/deepgram/aura-2-en"
-DEFAULT_VOICE = "orion"
+DEFAULT_VOICE = "arcas"
 MAX_CHARS = 1500
 PAUSE_PARAGRAPH = 0.55
 PAUSE_HEADING = 1.1
